@@ -9,7 +9,7 @@ const deleteItem = require('./routes/deleteItem');
 app.use(express.json());
 app.use(express.static(__dirname + '/static'));
 
-// ГОЛОВНА СТОРІНКА
+// ГОЛОВНА СТОРІНКА (для перевірки працездатності)
 app.get('/', (req, res) => {
     res.send(`
         <html>
@@ -22,7 +22,7 @@ app.get('/', (req, res) => {
                     <a href="/items" style="color: #0070f3; text-decoration: none; font-weight: bold;">➡️ View API Items</a>
                 </div>
                 <hr style="width: 200px; margin: 40px auto;">
-                <p style="font-size: 0.8em; color: gray;">Status: Online | DB: SQLite (In-Memory)</p>
+                <p style="font-size: 0.8em; color: gray;">Status: Online | DB: SQLite (In-Memory on Vercel)</p>
             </body>
         </html>
     `);
@@ -34,7 +34,7 @@ app.post('/items', addItem);
 app.put('/items/:id', updateItem);
 app.delete('/items/:id', deleteItem);
 
-// ІНІЦІАЛІЗАЦІЯ БАЗИ ДАНИХ ДЛЯ VERCEL (SERVERLESS)
+// ІНІЦІАЛІЗАЦІЯ БАЗИ ДАНИХ ДЛЯ VERCEL (SERVERLESS MODE)
 let dbInitialized = false;
 app.use(async (req, res, next) => {
     if (!dbInitialized) {
@@ -48,7 +48,7 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// ЛОКАЛЬНИЙ ЗАПУСК (якщо запускаєш через node src/index.js)
+// ЛОКАЛЬНИЙ ЗАПУСК
 if (require.main === module) {
     db.init().then(() => {
         app.listen(3000, () => console.log('Listening on port 3000'));

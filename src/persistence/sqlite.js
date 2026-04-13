@@ -2,26 +2,27 @@ const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
 
-// Якщо запускаються тести, використовуємо базу в пам'яті (:memory:),
-// інакше беремо шлях зі змінних середовища або стандартний /etc/todos/todo.db
-const location = process.env.NODE_ENV === 'test' 
+// КРИТИЧНЕ ВИПРАВЛЕННЯ ДЛЯ VERCEL:
+// Якщо ми в хмарі Vercel або запускаємо тести — використовуємо пам'ять (:memory:)
+// Якщо локально — створюємо файл todo.db у папці persistence
+const location = (process.env.NODE_ENV === 'test' || process.env.VERCEL) 
     ? ':memory:' 
-    : (process.env.SQLITE_DB_LOCATION || '/etc/todos/todo.db');
+    : path.join(__dirname, 'todo.db');
 
 let db;
 
 function init() {
-    const dirName = path.dirname(location);
-    if (location !== ':memory:' && !fs.existsSync(dirName)) {
-        fs.mkdirSync(dirName, { recursive: true });
-    }
-
     return new Promise((acc, rej) => {
+        // Перевіряємо папку тільки якщо це не пам'ять
+        if (location !== ':memory:') {
+            const dirName = path.dirname(location);
+            if (!fs.existsSync(dirName)) {
+                fs.mkdirSync(dirName, { recursive: true });
+            }
+        }
+
         db = new sqlite3.Database(location, err => {
             if (err) return rej(err);
-
-            if (process.env.NODE_ENV !== 'test')
-                console.log(`Using sqlite database at ${location}`);
 
             db.run(
                 'CREATE TABLE IF NOT EXISTS todo_items (id varchar(36), name varchar(255), completed boolean)',
@@ -85,7 +86,7 @@ async function updateItem(id, item) {
             },
         );
     });
-} 
+}
 
 async function removeItem(id) {
     return new Promise((acc, rej) => {
