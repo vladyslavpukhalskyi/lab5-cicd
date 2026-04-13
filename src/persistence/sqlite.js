@@ -1,14 +1,18 @@
 const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
-const location = process.env.NODE_ENV === 'test'
-    ? './todo-test.db'
+const path = require('path');
+
+// Якщо запускаються тести, використовуємо базу в пам'яті (:memory:),
+// інакше беремо шлях зі змінних середовища або стандартний /etc/todos/todo.db
+const location = process.env.NODE_ENV === 'test' 
+    ? ':memory:' 
     : (process.env.SQLITE_DB_LOCATION || '/etc/todos/todo.db');
 
-let db, dbAll, dbRun;
+let db;
 
 function init() {
-    const dirName = require('path').dirname(location);
-    if (!fs.existsSync(dirName)) {
+    const dirName = path.dirname(location);
+    if (location !== ':memory:' && !fs.existsSync(dirName)) {
         fs.mkdirSync(dirName, { recursive: true });
     }
 
@@ -21,7 +25,7 @@ function init() {
 
             db.run(
                 'CREATE TABLE IF NOT EXISTS todo_items (id varchar(36), name varchar(255), completed boolean)',
-                (err, result) => {
+                (err) => {
                     if (err) return rej(err);
                     acc();
                 },
@@ -43,13 +47,7 @@ async function getItems() {
     return new Promise((acc, rej) => {
         db.all('SELECT * FROM todo_items', (err, rows) => {
             if (err) return rej(err);
-            acc(
-                rows.map(item =>
-                    Object.assign({}, item, {
-                        completed: item.completed === 1,
-                    }),
-                ),
-            );
+            acc(rows.map(item => Object.assign({}, item, { completed: item.completed === 1 })));
         });
     });
 }
@@ -58,13 +56,7 @@ async function getItem(id) {
     return new Promise((acc, rej) => {
         db.all('SELECT * FROM todo_items WHERE id=?', [id], (err, rows) => {
             if (err) return rej(err);
-            acc(
-                rows.map(item =>
-                    Object.assign({}, item, {
-                        completed: item.completed === 1,
-                    }),
-                )[0],
-            );
+            acc(rows.map(item => Object.assign({}, item, { completed: item.completed === 1 }))[0]);
         });
     });
 }
