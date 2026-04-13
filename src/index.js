@@ -9,46 +9,46 @@ const deleteItem = require('./routes/deleteItem');
 app.use(express.json());
 app.use(express.static(__dirname + '/static'));
 
-// ГОЛОВНА СТОРІНКА (Додаємо для перевірки)
+// ГОЛОВНА СТОРІНКА
 app.get('/', (req, res) => {
     res.send(`
         <html>
-            <body style="font-family: sans-serif; text-align: center; padding-top: 50px;">
+            <head><title>Lab 6 Success</title></head>
+            <body style="font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f4f7f6;">
                 <h1 style="color: #0070f3;">✅ Site is working!</h1>
-                <p>Lab 5 & 6 are successfully deployed by Pukhalskyi Vlad.</p>
-                <a href="/items">View Items API</a>
+                <p style="font-size: 1.2em;">Lab 5 (CI/CD) & Lab 6 (Terraform) are successfully deployed.</p>
+                <p><strong>Student:</strong> Pukhalskyi Vladyslav</p>
+                <div style="margin-top: 20px;">
+                    <a href="/items" style="color: #0070f3; text-decoration: none; font-weight: bold;">➡️ View API Items</a>
+                </div>
+                <hr style="width: 200px; margin: 40px auto;">
+                <p style="font-size: 0.8em; color: gray;">Status: Online | DB: SQLite (In-Memory)</p>
             </body>
         </html>
     `);
 });
 
+// МАРШРУТИ API
 app.get('/items', getItems);
 app.post('/items', addItem);
 app.put('/items/:id', updateItem);
 app.delete('/items/:id', deleteItem);
 
-// ЛОГІКА ЗАПУСКУ
-// На Vercel ми не викликаємо app.listen, але нам потрібно ініціалізувати БД
-let isDbInitialized = false;
-const initDb = async () => {
-    if (!isDbInitialized) {
-        await db.init();
-        isDbInitialized = true;
-    }
-};
-
-// Middleware для гарантованої ініціалізації БД перед запитами
+// ІНІЦІАЛІЗАЦІЯ БАЗИ ДАНИХ ДЛЯ VERCEL (SERVERLESS)
+let dbInitialized = false;
 app.use(async (req, res, next) => {
-    try {
-        await initDb();
-        next();
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Database initialization failed');
+    if (!dbInitialized) {
+        try {
+            await db.init();
+            dbInitialized = true;
+        } catch (err) {
+            console.error('DB Init Error:', err);
+        }
     }
+    next();
 });
 
-// Для локальної розробки
+// ЛОКАЛЬНИЙ ЗАПУСК (якщо запускаєш через node src/index.js)
 if (require.main === module) {
     db.init().then(() => {
         app.listen(3000, () => console.log('Listening on port 3000'));
@@ -58,5 +58,5 @@ if (require.main === module) {
     });
 }
 
-// Експорт для Vercel
+// ЕКСПОРТ ДЛЯ VERCEL
 module.exports = app;
