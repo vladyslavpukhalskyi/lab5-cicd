@@ -7,34 +7,8 @@ const updateItem = require('./routes/updateItem');
 const deleteItem = require('./routes/deleteItem');
 
 app.use(express.json());
-app.use(express.static(__dirname + '/static'));
 
-// ГОЛОВНА СТОРІНКА (для візуальної перевірки)
-app.get('/', (req, res) => {
-    res.send(`
-        <html>
-            <head><title>Lab 6 Success</title></head>
-            <body style="font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f4f7f6;">
-                <h1 style="color: #0070f3;">✅ Site is working!</h1>
-                <p style="font-size: 1.2em;">Lab 5 (CI/CD) & Lab 6 (Terraform) are successfully deployed.</p>
-                <p><strong>Student:</strong> Pukhalskyi Vladyslav</p>
-                <div style="margin-top: 20px;">
-                    <a href="/items" style="color: #0070f3; text-decoration: none; font-weight: bold;">➡️ View API Items</a>
-                </div>
-                <hr style="width: 200px; margin: 40px auto;">
-                <p style="font-size: 0.8em; color: gray;">Status: Online | DB: SQLite (In-Memory on Vercel)</p>
-            </body>
-        </html>
-    `);
-});
-
-// МАРШРУТИ API
-app.get('/items', getItems);
-app.post('/items', addItem);
-app.put('/items/:id', updateItem);
-app.delete('/items/:id', deleteItem);
-
-// ІНІЦІАЛІЗАЦІЯ БАЗИ ДАНИХ ДЛЯ VERCEL (SERVERLESS MODE)
+// 1. ІНІЦІАЛІЗАЦІЯ БД (Middleware має бути першим)
 let dbInitialized = false;
 app.use(async (req, res, next) => {
     if (!dbInitialized) {
@@ -48,15 +22,31 @@ app.use(async (req, res, next) => {
     next();
 });
 
-// ЛОКАЛЬНИЙ ЗАПУСК
+// 2. МАРШРУТИ
+app.get('/', (req, res) => {
+    res.send(`
+        <html>
+            <head><title>Lab 6 Success</title></head>
+            <body style="font-family: sans-serif; text-align: center; padding-top: 50px; background-color: #f4f7f6;">
+                <h1 style="color: #0070f3;">✅ Site is working!</h1>
+                <p style="font-size: 1.2em;">Lab 5 & Lab 6 successfully deployed.</p>
+                <p><strong>Student:</strong> Pukhalskyi Vladyslav</p>
+                <a href="/items" style="color: #0070f3; font-weight: bold;">➡️ View API Items</a>
+            </body>
+        </html>
+    `);
+});
+
+app.get('/items', getItems);
+app.post('/items', addItem);
+app.put('/items/:id', updateItem);
+app.delete('/items/:id', deleteItem);
+
+// 3. ЕКСПОРТ ДЛЯ VERCEL
+module.exports = app;
+
 if (require.main === module) {
     db.init().then(() => {
         app.listen(3000, () => console.log('Listening on port 3000'));
-    }).catch((err) => {
-        console.error(err);
-        process.exit(1);
     });
 }
-
-// ЕКСПОРТ ДЛЯ VERCEL
-module.exports = app;
