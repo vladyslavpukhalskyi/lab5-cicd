@@ -9,7 +9,7 @@ const deleteItem = require('./routes/deleteItem');
 app.use(express.json());
 app.use(express.static(__dirname + '/static'));
 
-// ГОЛОВНА СТОРІНКА (для перевірки працездатності)
+// ГОЛОВНА СТОРІНКА (для візуальної перевірки)
 app.get('/', (req, res) => {
     res.send(`
         <html>

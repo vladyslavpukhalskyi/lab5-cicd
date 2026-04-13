@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // КРИТИЧНЕ ВИПРАВЛЕННЯ ДЛЯ VERCEL:
-// Якщо ми в хмарі Vercel або запускаємо тести — використовуємо пам'ять (:memory:)
+// Якщо ми в хмарі Vercel (наявна змінна process.env.VERCEL) або запускаємо тести — використовуємо пам'ять (:memory:)
 // Якщо локально — створюємо файл todo.db у папці persistence
 const location = (process.env.NODE_ENV === 'test' || process.env.VERCEL) 
     ? ':memory:' 
